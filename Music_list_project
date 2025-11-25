@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>Ultimate Grunge Song Collection</title>
+
+<style>
+    body {
+        margin: 0;
+        font-family: "Courier New", monospace;
+        background: #0b0b0b url('https://i.imgur.com/H3ZqPpC.jpg') center/cover fixed;
+        color: #e2e2e2;
+        text-shadow: 0 0 5px #000;
+    }
+
+    header {
+        padding: 30px;
+        text-align: center;
+        font-size: 34px;
+        letter-spacing: 3px;
+        background: rgba(0,0,0,0.75);
+        border-bottom: 3px solid #550000;
+        backdrop-filter: blur(4px);
+        user-select: none;
+    }
+
+    .container {
+        width: 90%;
+        max-width: 1000px;
+        margin: 40px auto;
+        background: rgba(0,0,0,0.6);
+        padding: 30px;
+        border-radius: 10px;
+        border: 1px solid #333;
+        box-shadow: 0 0 45px rgba(0,0,0,0.9);
+    }
+
+    h2 {
+        font-size: 22px;
+        border-left: 4px solid #b30000;
+        padding-left: 10px;
+        margin-bottom: 12px;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+
+    /* Форма */
+    form {
+        margin-bottom: 25px;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+    }
+
+    form input {
+        padding: 10px;
+        background: #222;
+        border: 1px solid #555;
+        color: #fff;
+        border-radius: 4px;
+    }
+
+    form input:focus {
+        outline: none;
+        border-color: #b30000;
+        background: #151515;
+    }
+
+    #addBtn {
+        grid-column: 1 / 3;
+        padding: 12px;
+        background: #b30000;
+        border: none;
+        color: white;
+        cursor: pointer;
+        border-radius: 4px;
+        font-weight: bold;
+        transition: .2s;
+    }
+
+    #addBtn:hover {
+        background: #d10000;
+        transform: scale(1.03);
+    }
+
+    /* Таблица */
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        background: rgba(25,25,25,0.65);
+        margin-top: 20px;
+    }
+
+    th {
+        background: #2b2b2b;
+        padding: 12px;
+        text-align: left;
+        border-bottom: 2px solid #444;
+        text-transform: uppercase;
+        font-size: 14px;
+        letter-spacing: 1px;
+    }
+
+    td {
+        padding: 10px;
+        border-bottom: 1px solid #333;
+        vertical-align: middle;
+    }
+
+    tr:hover td {
+        background: rgba(255,0,0,0.05);
+    }
+
+    img.cover {
+        width: 60px;
+        height: 60px;
+        object-fit: cover;
+        border: 1px solid #333;
+        border-radius: 5px;
+    }
+
+    button.action-btn {
+        padding: 6px 10px;
+        margin-right: 5px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 12px;
+        transition: 0.2s;
+        color: #fff;
+    }
+
+    .edit-btn { background: #4444aa; }
+    .delete-btn { background: #b30000; }
+    .play-btn { background: #008800; }
+
+    button.action-btn:hover {
+        transform: scale(1.05);
+        opacity: 0.85;
+    }
+
+    audio {
+        width: 100%;
+        margin-top: 10px;
+        outline: none;
+    }
+
+    .empty {
+        text-align: center;
+        padding: 20px;
+        color: #aaa;
+        font-style: italic;
+    }
+</style>
+</head>
+
+<body>
+
+<header>ULTIMATE GRUNGE SONG COLLECTION</header>
+
+<div class="container">
+
+    <h2>Добавить песню</h2>
+    <form id="songForm">
+        <input id="title" type="text" placeholder="Название песни" required>
+        <input id="artist" type="text" placeholder="Исполнитель" required>
+        <input id="year" type="number" placeholder="Год">
+        <input id="genre" type="text" placeholder="Жанр (Grunge, Rock...)">
+        <input id="cover" type="text" placeholder="URL обложки">
+        <input id="audio" type="text" placeholder="URL аудио (mp3)">
+        <button id="addBtn" type="submit">Добавить</button>
+    </form>
+
+    <h2>Коллекция песен</h2>
+
+    <table>
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>Обложка</th>
+                <th>Песня</th>
+                <th>Исполнитель</th>
+                <th>Год</th>
+                <th>Жанр</th>
+                <th>Действия</th>
+            </tr>
+        </thead>
+
+        <tbody id="tableBody">
+            <tr class="empty">
+                <td colspan="7">Пусто… как репточка в 3:17 утра перед концертом.</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <audio id="player" controls style="display:none;"></audio>
+
+</div>
+
+<script>
+    const form = document.getElementById("songForm");
+    const tableBody = document.getElementById("tableBody");
+    const player = document.getElementById("player");
+
+    let songs = JSON.parse(localStorage.getItem("songs") || "[]");
+
+    form.addEventListener("submit", e => {
+        e.preventDefault();
+
+        const song = {
+            title: title.value.trim(),
+            artist: artist.value.trim(),
+            year: year.value.trim(),
+            genre: genre.value.trim(),
+            cover: cover.value.trim(),
+            audio: audio.value.trim()
+        };
+
+        songs.push(song);
+        save();
+        form.reset();
+        render();
+    });
+
+    function save() {
+        localStorage.setItem("songs", JSON.stringify(songs));
+    }
+
+    function render() {
+        tableBody.innerHTML = "";
+
+        if (songs.length === 0) {
+            tableBody.innerHTML = `<tr class="empty">
+                <td colspan="7">Тишина… последняя нота ещё висит в воздухе.</td>
+            </tr>`;
+            return;
+        }
+
+        songs.forEach((song, i) => {
+            tableBody.innerHTML += `
+                <tr>
+                    <td>${i + 1}</td>
+                    <td><img class="cover" src="${song.cover || "https://i.imgur.com/6YV6XQw.png"}"></td>
+                    <td>${song.title}</td>
+                    <td>${song.artist}</td>
+                    <td>${song.year || "-"}</td>
+                    <td>${song.genre || "-"}</td>
+                    <td>
+                        <button class="action-btn play-btn" onclick="playSong('${song.audio || ""}')">▶</button>
+                        <button class="action-btn edit-btn" onclick="editSong(${i})">✎</button>
+                        <button class="action-btn delete-btn" onclick="deleteSong(${i})">✖</button>
+                    </td>
+                </tr>
+            `;
+        });
+    }
+
+    function playSong(url) {
+        if (!url) {
+            alert("Аудио не добавлено!");
+            return;
+        }
+        player.src = url;
+        player.style.display = "block";
+        player.play();
+    }
+
+    function editSong(i) {
+        const s = songs[i];
+
+        title.value = s.title;
+        artist.value = s.artist;
+        year.value = s.year;
+        genre.value = s.genre;
+        cover.value = s.cover;
+        audio.value = s.audio;
+
+        deleteSong(i);
+    }
+
+    function deleteSong(i) {
+        songs.splice(i, 1);
+        save();
+        render();
+    }
+
+    render();
+</script>
+
+</body>
+</html>
