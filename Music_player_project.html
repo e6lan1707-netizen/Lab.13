@@ -8,7 +8,7 @@
     body {
         margin: 0;
         font-family: "Courier New", monospace;
-        background: #0b0b0b url('https://i.imgur.com/H3ZqPpC.jpg') center/cover fixed;
+        background: #0b0b0b url('https://www.yandex.kz/images/search?text=%D1%81%D0%B5%D1%80%D1%8B%D0%B9+%D1%84%D0%BE%D0%BD&img_url=https%3A%2F%2Fimg.freepik.com%2Fpremium-photo%2Fwhite-gray-banner-background_28629-2684.jpg&pos=1&rpt=simage&stype=image&lr=162&parent-reqid=1764149566393944-8491357995079745535-balancer-term-kz-ext-1-BAL&source=serp') center/cover fixed;
         color: #e2e2e2;
         text-shadow: 0 0 5px #000;
     }
@@ -156,7 +156,7 @@
 
 <body>
 
-<header>ULTIMATE GRUNGE SONG COLLECTION</header>
+<header>ULTIMATE GRUNGE SONG PLAYER</header>
 
 <div class="container">
 
@@ -190,6 +190,105 @@
             <tr class="empty">
                 <td colspan="7">Пусто… как репточка в 3:17 утра перед концертом.</td>
             </tr>
+        </tbody>
+    </table>
+
+    <audio id="player" controls style="display:none;"></audio>
+
+</div>
+
+<script>
+    const form = document.getElementById("songForm");
+    const tableBody = document.getElementById("tableBody");
+    const player = document.getElementById("player");
+
+    let songs = JSON.parse(localStorage.getItem("songs") || "[]");
+
+    form.addEventListener("submit", e => {
+        e.preventDefault();
+
+        const song = {
+            title: title.value.trim(),
+            artist: artist.value.trim(),
+            year: year.value.trim(),
+            genre: genre.value.trim(),
+            cover: cover.value.trim(),
+            audio: audio.value.trim()
+        };
+
+        songs.push(song);
+        save();
+        form.reset();
+        render();
+    });
+
+    function save() {
+        localStorage.setItem("songs", JSON.stringify(songs));
+    }
+
+    function render() {
+        tableBody.innerHTML = "";
+
+        if (songs.length === 0) {
+            tableBody.innerHTML = `<tr class="empty">
+                <td colspan="7">Тишина… последняя нота ещё висит в воздухе.</td>
+            </tr>`;
+            return;
+        }
+
+        songs.forEach((song, i) => {
+            tableBody.innerHTML += `
+                <tr>
+                    <td>${i + 1}</td>
+                    <td><img class="cover" src="${song.cover || "https://i.imgur.com/6YV6XQw.png"}"></td>
+                    <td>${song.title}</td>
+                    <td>${song.artist}</td>
+                    <td>${song.year || "-"}</td>
+                    <td>${song.genre || "-"}</td>
+                    <td>
+                        <button class="action-btn play-btn" onclick="playSong('${song.audio || ""}')">▶</button>
+                        <button class="action-btn edit-btn" onclick="editSong(${i})">✎</button>
+                        <button class="action-btn delete-btn" onclick="deleteSong(${i})">✖</button>
+                    </td>
+                </tr>
+            `;
+        });
+    }
+
+    function playSong(url) {
+        if (!url) {
+            alert("Аудио не добавлено!");
+            return;
+        }
+        player.src = url;
+        player.style.display = "block";
+        player.play();
+    }
+
+    function editSong(i) {
+        const s = songs[i];
+
+        title.value = s.title;
+        artist.value = s.artist;
+        year.value = s.year;
+        genre.value = s.genre;
+        cover.value = s.cover;
+        audio.value = s.audio;
+
+        deleteSong(i);
+    }
+
+    function deleteSong(i) {
+        songs.splice(i, 1);
+        save();
+        render();
+    }
+
+    render();
+</script>
+
+</body>
+</html>            </tr>
         </tbody>
     </table>
 
